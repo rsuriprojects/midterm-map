@@ -1,6 +1,6 @@
 # 2026 Midterm Map
 
-Interactive map of the November 3, 2026 Senate and governor races. Hover or tap a state for the matchup, rating and latest polling.
+Interactive map of the November 3, 2026 Senate, House and governor races. Hover or tap a state for the matchup, rating and latest polling.
 
 Live site: https://rsuriprojects.github.io/midterm-map/
 

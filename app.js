@@ -44,7 +44,22 @@
     }
     return race.rating;
   }
-  const hasResults = () => Object.values(E[chamber].races).some(r => r.result && r.result.reporting > 0);
+  const hasResults = () => chamber === "house"
+    ? H.called.D + H.called.R > 0 || H.districts.some(d => d[5] && d[5].reporting > 0)
+    : Object.values(E[chamber].races).some(r => r.result && r.result.reporting > 0);
+
+  // The House map shades each state by how many toss up or lean seats it has.
+  const H = E.house;
+  const COMPETITIVE = ["TU", "LD", "LR"];
+  const distsIn = a => H.districts.filter(d => d[0].startsWith(a + "-"));
+  const competitiveIn = a => distsIn(a).filter(d => COMPETITIVE.includes(d[3])).length;
+  const HOUSE_STEPS = [
+    { min: 5, label: "5+", color: "var(--h4)", text: "dark" },
+    { min: 3, label: "3–4", color: "var(--h3)", text: "dark" },
+    { min: 2, label: "2", color: "var(--h2)", text: "light" },
+    { min: 1, label: "1", color: "var(--h1)", text: "light" }
+  ];
+  const hasRace = a => chamber === "house" || !!E[chamber].races[a];
 
   // ---------- Map ----------
   const svg = d3.select("#map");
@@ -113,6 +128,10 @@
   }
 
   function fillFor(abbr) {
+    if (chamber === "house") {
+      const n = competitiveIn(abbr);
+      return HOUSE_STEPS.find(s => n >= s.min) || null;
+    }
     const race = E[chamber].races[abbr];
     if (!race) return null;
     return R[category(race)];
@@ -123,21 +142,28 @@
     document.querySelectorAll(".tabs button").forEach(b =>
       b.setAttribute("aria-selected", String(b.dataset.chamber === chamber)));
 
-    const n = Object.keys(C.races).length;
-    document.getElementById("map-title").textContent = chamber === "senate" ? "Senate races" : "Governor races";
-    document.getElementById("map-sub").textContent = hasResults()
-      ? `${n} races on the ballot. States with votes counted are colored by who leads; called races are solid.`
-      : `${n} races on the ballot Tuesday, colored by Cook Political Report rating. Hover or tap a state for the matchup.`;
+    document.getElementById("map-title").textContent =
+      { senate: "Senate races", house: "House races", governor: "Governor races" }[chamber];
+    if (chamber === "house") {
+      const close = H.districts.filter(d => COMPETITIVE.includes(d[3])).length;
+      document.getElementById("map-sub").textContent =
+        `All 435 seats are on the ballot. ${close} are toss ups or leaning, and the map shades each state by how many it has. Hover or tap a state for its close districts.`;
+    } else {
+      const n = Object.keys(C.races).length;
+      document.getElementById("map-sub").textContent = hasResults()
+        ? `${n} races on the ballot. States with votes counted are colored by who leads; called races are solid.`
+        : `${n} races on the ballot Tuesday, colored by Cook Political Report rating. Hover or tap a state for the matchup.`;
+    }
 
     gStates.selectAll("path")
-      .attr("class", d => "state" + (C.races[d.abbr] ? "" : " none"))
+      .attr("class", d => "state" + (fillFor(d.abbr) ? "" : " none"))
       .style("fill", d => { const r = fillFor(d.abbr); return r ? r.color : null; });
 
     gLabels.selectAll("text")
       .attr("class", d => { const r = fillFor(d.abbr); return "lbl " + (r ? r.text : "off"); });
 
     gCallouts.selectAll("g")
-      .attr("class", a => "callout" + (C.races[a] ? "" : " none"))
+      .attr("class", a => "callout" + (fillFor(a) ? "" : " none"))
       .each(function (a) {
         const r = fillFor(a);
         d3.select(this).select("rect").style("fill", r ? r.color : null);
@@ -151,6 +177,14 @@
   }
 
   function renderLegend() {
+    if (chamber === "house") {
+      const counts = HOUSE_STEPS.map(s => Object.keys(H.seats).filter(a => fillFor(a) === s).length);
+      const items = HOUSE_STEPS.slice().reverse().map((s, i) =>
+        `<li><i style="background:${s.color}"></i>${s.label} close seat${s.min > 1 ? "s" : ""} <b>${counts[HOUSE_STEPS.length - 1 - i]}</b></li>`);
+      items.unshift(`<li><i style="background:var(--empty)"></i>None</li>`);
+      document.getElementById("legend").innerHTML = items.join("");
+      return;
+    }
     const races = Object.values(E[chamber].races);
     const counts = {};
     races.forEach(r => { const c = category(r); counts[c] = (counts[c] || 0) + 1; });
@@ -160,7 +194,42 @@
     document.getElementById("legend").innerHTML = items.join("");
   }
 
+  function renderHouseTally() {
+    const total = 435, called = H.called.D + H.called.R;
+    const tally = document.getElementById("tally");
+    const bar = document.getElementById("bar");
+    const mark = `<i class="bar-mark" style="left:calc(${(H.majority / total) * 100}% - 1px)"></i>`;
+
+    if (called > 0) {
+      tally.innerHTML = `
+        <div class="side-d"><span class="num">${H.called.D}</span><span class="who">Democrats</span></div>
+        <div class="mid"><b>${total - called}</b>not called</div>
+        <div class="side-r"><span class="num">${H.called.R}</span><span class="who">Republicans</span></div>`;
+      bar.innerHTML =
+        `<span style="width:${H.called.D / total * 100}%;background:var(--d3)"></span>` +
+        `<span style="width:${(total - called) / total * 100}%"></span>` +
+        `<span style="width:${H.called.R / total * 100}%;background:var(--r3)"></span>` + mark;
+      document.getElementById("bar-note").textContent =
+        `Seats called by the AP so far. A party needs ${H.majority} for control.`;
+      return;
+    }
+
+    const sum = { LkD: 0, LD: 0, TU: 0, LR: 0, LkR: 0 };
+    H.districts.forEach(d => { if (d[3] in sum) sum[d[3]]++; });
+    sum.SD = H.leaning.D - sum.LkD - sum.LD;
+    sum.SR = H.leaning.R - sum.LkR - sum.LR;
+    tally.innerHTML = `
+      <div class="side-d"><span class="num">${H.leaning.D}</span><span class="who">Democrats</span></div>
+      <div class="mid"><b>${sum.TU}</b>toss ups</div>
+      <div class="side-r"><span class="num">${H.leaning.R}</span><span class="who">Republicans</span></div>`;
+    bar.innerHTML = RATINGS.map(r =>
+      `<span style="width:${sum[r.key] / total * 100}%;background:${r.color}"></span>`).join("") + mark;
+    document.getElementById("bar-note").textContent =
+      `Counts seats at least leaning to each party. Republicans hold the House now; a party needs ${H.majority} of 435 seats for control, and Cook has Democrats at ${H.leaning.D} before any toss ups.`;
+  }
+
   function renderTally() {
+    if (chamber === "house") return renderHouseTally();
     const C = E[chamber];
     const sum = { SD: 0, LkD: 0, LD: 0, TU: 0, LR: 0, LkR: 0, SR: 0 };
     Object.values(C.races).forEach(r => sum[category(r)]++);
@@ -190,12 +259,25 @@
   }
 
   const ORDER = { TU: 0, LD: 1, LR: 1, LkD: 2, LkR: 2 };
+  function pillHTML(key) {
+    const rt = R[key];
+    return `<span class="pill" style="background:${rt.color};color:${rt.text === "light" ? "#f4f6f9" : "#12151a"}">${rt.label}</span>`;
+  }
+
   function renderWatch() {
+    const ol = document.getElementById("watch");
+    if (chamber === "house") {
+      ol.innerHTML = H.districts.filter(d => d[3] === "TU").map(d =>
+        `<li data-abbr="${d[0].slice(0, 2)}" tabindex="0">
+          <span class="ab">${d[0].slice(0, 2)}</span>
+          <span class="m">${d[0]}<span class="vs">·</span>${d[2] ? last(d[2]) + ` (${d[1]})` : d[4]}</span>
+          ${pillHTML(d[3])}
+        </li>`).join("");
+    } else {
     const races = E[chamber].races;
     const list = Object.keys(races)
       .filter(a => races[a].rating in ORDER)
       .sort((a, b) => ORDER[races[a].rating] - ORDER[races[b].rating] || NAMES[a].localeCompare(NAMES[b]));
-    const ol = document.getElementById("watch");
     ol.innerHTML = list.map(a => {
       const x = races[a], rt = R[category(x)];
       const left = x.d || x.i, right = x.r;
@@ -205,6 +287,7 @@
         <span class="pill" style="background:${rt.color};color:${rt.text === "light" ? "#f4f6f9" : "#12151a"}">${rt.label}</span>
       </li>`;
     }).join("");
+    }
 
     ol.querySelectorAll("li").forEach(li => {
       const a = li.dataset.abbr;
@@ -220,7 +303,7 @@
     const f = features.find(x => x.abbr === a);
     if (!f) return;
     hl.attr("d", path(f)).raise();
-    gStates.selectAll("path").classed("dim", d => d.abbr !== a && !!E[chamber].races[d.abbr]);
+    gStates.selectAll("path").classed("dim", d => d.abbr !== a && !!fillFor(d.abbr));
   }
   function unfocus() {
     hl.attr("d", null);
@@ -230,7 +313,31 @@
   // ---------- Tooltip ----------
   const tip = document.getElementById("tip");
 
+  const RANK = { TU: 0, LD: 1, LR: 1, LkD: 2, LkR: 2, SD: 3, SR: 3 };
+  function houseTipHTML(a) {
+    const seats = H.seats[a];
+    const list = distsIn(a).sort((x, y) => RANK[x[3]] - RANK[y[3]] || x[0].localeCompare(y[0]));
+    const close = list.filter(d => COMPETITIVE.includes(d[3])).length;
+    const rows = list.map(([code, held, inc, rating, note, res]) => {
+      const who = inc
+        ? `${inc} <small>${held}${note ? ", " + note : ""}</small>`
+        : `<small>${note}</small>`;
+      const flip = held && ((held === "R" && rating.endsWith("D")) || (held === "D" && rating.endsWith("R")));
+      const resLine = res && res.reporting > 0
+        ? `<span class="res">D ${res.d.toFixed(1)} · R ${res.r.toFixed(1)} · ${res.reporting}% counted${res.called ? " · called " + res.called : ""}</span>`
+        : "";
+      return `<li><span class="code">${code}</span><span class="who">${who}${flip ? " <small>· flip</small>" : ""}</span>${pillHTML(rating)}${resLine}</li>`;
+    }).join("");
+    return `<button class="tip-close" aria-label="Close">×</button>
+      <div class="tip-head"><h3>${NAMES[a]}</h3><span class="tip-kind">${seats} seat${seats > 1 ? "s" : ""}</span></div>
+      ${list.length
+        ? `<ul class="dists">${rows}</ul>`
+        : `<p class="muted" style="margin:8px 0 0">${seats > 1 ? `All ${seats} seats are` : "The one seat is"} rated Solid for the party that holds it.</p>`}
+      <div class="tip-src">${close ? `${close} toss up or lean · ` : ""}Solid seats not listed · ratings from Cook</div>`;
+  }
+
   function tipHTML(a) {
+    if (chamber === "house") return houseTipHTML(a);
     const race = E[chamber].races[a];
     const office = chamber === "senate" ? "Senate" : "Governor";
     if (!race) {
@@ -295,7 +402,7 @@
     tip.classList.remove("sheet");
     tip.hidden = false;
     place(ev.clientX, ev.clientY);
-    if (E[chamber].races[a]) focusState(a); else unfocus();
+    if (hasRace(a)) focusState(a); else unfocus();
   }
 
   function place(x, y) {
@@ -323,7 +430,7 @@
     }
     tip.querySelector(".tip-close").addEventListener("click", e => { e.stopPropagation(); unpin(); });
     document.querySelectorAll(".watch li").forEach(li => li.classList.toggle("on", li.dataset.abbr === a));
-    if (E[chamber].races[a]) focusState(a); else unfocus();
+    if (hasRace(a)) focusState(a); else unfocus();
   }
   function unpin() {
     pinned = null;
@@ -346,7 +453,7 @@
   }));
   try {
     const saved = localStorage.getItem("chamber");
-    if (saved === "governor" || saved === "senate") chamber = saved;
+    if (saved === "governor" || saved === "senate" || saved === "house") chamber = saved;
   } catch (e) {}
 
   // ---------- Countdown ----------

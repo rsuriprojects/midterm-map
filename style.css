@@ -16,6 +16,11 @@
   --r1: #e9ada5;
   --tu: #cbb47f;
   --ind: #9a8fc0;
+  /* House map: how many competitive seats a state has */
+  --h1: #4f4a39;
+  --h2: #6a5f45;
+  --h3: #9c875c;
+  --h4: #cbb47f;
 
   --f-display: "Libre Franklin", "Franklin Gothic Medium", "Arial Narrow", sans-serif;
   --f-body: "Public Sans", -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -153,6 +158,13 @@ button { font: inherit; color: inherit; }
 .tip-sec { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
 .tip-sec .eyebrow { margin-bottom: 4px; }
 .tip-sec p { margin: 0; font-size: 13px; line-height: 1.45; }
+.dists { list-style: none; padding: 0; margin: 12px 0 0; display: flex; flex-direction: column; gap: 7px; }
+.dists li { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+.dists .code { font: 500 12px var(--f-data); color: var(--muted); }
+.dists .who { font-size: 13px; min-width: 0; }
+.dists .who small { color: var(--muted); font-size: 11px; }
+.dists .res { grid-column: 2 / 4; font: 500 12px var(--f-data); color: var(--muted); }
+.dists .pill { margin: 0; }
 .tip-src { font-size: 11px; color: var(--muted); margin-top: 10px; }
 .tip-close { display: none; }
 .tip.sheet .tip-close {

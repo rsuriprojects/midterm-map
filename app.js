@@ -243,9 +243,13 @@
     const kind = [office, race.special ? "special" : null, race.open ? "open seat" : null].filter(Boolean).join(" · ");
     const res = race.result;
 
+    const avg = race.avg;
+    const counted = res && res.reporting > 0;
+    const shares = counted ? res : (avg && avg.d != null ? avg : null);
+
     const cands = [["D", race.d], ["R", race.r], ["I", race.i]].filter(([, n]) => n);
     const rows = cands.map(([p, n]) => {
-      const pct = res ? res[p.toLowerCase()] : null;
+      const pct = shares && shares[p.toLowerCase()] != null ? shares[p.toLowerCase()] : null;
       const won = res && res.called === p ? " ✓" : "";
       return `<li>
         <span class="chip" style="background:${PARTY[p]}">${p}</span>
@@ -255,12 +259,31 @@
       </li>`;
     }).join("");
 
+    // Headline margin: the count once votes are in, otherwise the polling average.
+    let lead = null;
+    if (shares) {
+      const ranked = cands.map(([p]) => [p, shares[p.toLowerCase()] || 0]).sort((a, b) => b[1] - a[1]);
+      if (ranked.length > 1) lead = { p: ranked[0][0], by: ranked[0][1] - ranked[1][1] };
+    } else if (avg && avg.lead) {
+      lead = { p: avg.lead, by: avg.by };
+    }
+    const nameOf = p => last(p === "D" ? race.d : p === "R" ? race.r : race.i);
+    const LEAD_INK = { D: "var(--d1)", R: "var(--r1)", I: "var(--ind)" };
+    const leadLine = lead
+      ? (lead.by < 0.05
+          ? `<div class="lead">Tied</div>`
+          : `<div class="lead" style="color:${LEAD_INK[lead.p]}">${nameOf(lead.p)} +${lead.by.toFixed(1)}</div>`)
+      : "";
+    const leadSub = counted ? "votes counted" : avg ? (avg.d != null ? "polling" : "polling average") : "";
+
     const flip = rt && race.held && ((race.held === "R" && rt.key.endsWith("D")) || (race.held === "D" && rt.key.endsWith("R")));
     return `<button class="tip-close" aria-label="Close">×</button>
       <div class="tip-head"><h3>${NAMES[a]}</h3><span class="tip-kind">${kind}</span></div>
+      ${leadLine ? `<div class="lead-row">${leadLine}<span class="lead-sub">${leadSub}</span></div>` : ""}
       <span class="pill" style="background:${rt.color};color:${rt.text === "light" ? "#f4f6f9" : "#12151a"}">${rt.label}${flip ? " · flip" : ""}</span>
       <ul class="cands">${rows}</ul>
-      ${res ? `<div class="tip-sec"><p>${res.reporting}% of expected vote counted${res.called ? "" : ". Not yet called."}</p></div>` : ""}
+      ${counted ? `<div class="tip-sec"><p>${res.reporting}% of expected vote counted${res.called ? "" : ". Not yet called."}</p></div>` : ""}
+      ${!counted && avg ? `<p class="avg-src">${avg.src}</p>` : ""}
       ${race.poll ? `<div class="tip-sec"><h4 class="eyebrow">Polling</h4><p>${race.poll}</p></div>` : ""}
       ${race.note ? `<div class="tip-sec"><p class="muted">${race.note}</p></div>` : ""}
       <div class="tip-src">Seat held by ${race.held === "D" ? "Democrats" : "Republicans"} · rating from Cook</div>`;

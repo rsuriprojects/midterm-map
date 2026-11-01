@@ -52,7 +52,7 @@ button { font: inherit; color: inherit; }
   border-bottom: 1px solid var(--line);
 }
 .brand { display: flex; align-items: baseline; gap: 10px; }
-.brand-year { font: 500 19px var(--f-data); color: var(--tu); letter-spacing: 0.02em; }
+.brand-year { font: 500 28px/1 var(--f-data); color: var(--tu); letter-spacing: -0.01em; }
 .brand-name { font: 800 20px var(--f-display); letter-spacing: -0.01em; }
 
 .tabs { display: flex; gap: 2px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 3px; }

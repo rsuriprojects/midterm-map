@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>2026 Midterm Map</title>
+  <meta name="description" content="Senate and governor races for the November 3, 2026 midterms, rated and mapped.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=Libre+Franklin:wght@600;800&family=Public+Sans:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <span class="brand-year">2026</span>
+      <span class="brand-name">Midterm Map</span>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Chamber">
+      <button id="tab-senate" role="tab" aria-selected="true" data-chamber="senate">Senate</button>
+      <button id="tab-governor" role="tab" aria-selected="false" data-chamber="governor">Governors</button>
+    </nav>
+    <div class="clock">
+      <span class="clock-label" id="clock-label">First polls close in</span>
+      <span class="clock-value" id="clock-value">–</span>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="map-wrap" aria-label="Map">
+      <div class="map-head">
+        <h1 id="map-title">Senate races</h1>
+        <p id="map-sub" class="muted"></p>
+      </div>
+      <svg id="map" viewBox="0 0 1060 620" role="img" aria-label="United States map of race ratings"></svg>
+      <ul class="legend" id="legend"></ul>
+    </section>
+
+    <aside class="side">
+      <section class="block">
+        <h2 class="eyebrow">Balance of power</h2>
+        <div class="tally" id="tally"></div>
+        <div class="bar" id="bar"></div>
+        <p class="bar-note muted" id="bar-note"></p>
+      </section>
+
+      <section class="block">
+        <h2 class="eyebrow">Races to watch</h2>
+        <ol class="watch" id="watch"></ol>
+      </section>
+    </aside>
+  </main>
+
+  <footer class="foot">
+    <p>Ratings: <a href="https://www.cookpolitical.com/ratings/senate-race-ratings" target="_blank" rel="noopener">Cook Political Report</a>.
+      Polls: <a href="https://www.realclearpolling.com/latest-polls/senate" target="_blank" rel="noopener">RealClearPolling</a>,
+      <a href="https://www.poliwave.com/us/senate" target="_blank" rel="noopener">Poliwave</a>, CNN.
+      Candidates: Wikipedia, 270toWin.</p>
+    <p class="muted" id="updated"></p>
+  </footer>
+
+  <div class="tip" id="tip" role="dialog" aria-live="polite" hidden></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

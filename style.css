@@ -197,3 +197,50 @@ button { font: inherit; color: inherit; }
 }
 
 [hidden] { display: none !important; }
+
+/* Election night: called vs. leading vs. no votes */
+.sw-called-D { background: var(--d3); }
+.sw-called-R { background: var(--r3); }
+.sw-called-I { background: var(--ind); }
+.sw-lead-D { background: repeating-linear-gradient(45deg, var(--d2) 0 3px, var(--pending) 3px 6px); }
+.sw-lead-R { background: repeating-linear-gradient(45deg, var(--r2) 0 3px, var(--pending) 3px 6px); }
+.sw-lead-I { background: repeating-linear-gradient(45deg, var(--ind) 0 3px, var(--pending) 3px 6px); }
+.sw-wait { background: var(--pending); }
+.sw-none { background: var(--empty); }
+.lbl.light { paint-order: stroke; stroke: rgba(10, 12, 16, 0.55); stroke-width: 2.5px; }
+
+.lead-note { display: block; font: 500 12px var(--f-data); color: var(--muted); margin-top: 2px; }
+.side-r .lead-note { text-align: right; }
+
+.pill-lead { background: transparent; border: 1px solid currentColor; font-family: var(--f-data); font-weight: 500; }
+.pill-lead.lead-D { color: var(--d1); }
+.pill-lead.lead-R { color: var(--r1); }
+.pill-lead.lead-I { color: var(--ind); }
+.pill-wait { background: transparent; border: 1px dashed var(--line); color: var(--muted); }
+
+.tip-status { margin-top: 8px; padding: 6px 10px; border-radius: 6px; font-size: 13px; font-weight: 600; }
+.tip-status.won { background: var(--c); color: #f4f6f9; }
+.tip-status.open { background: transparent; border: 1px dashed var(--line); color: var(--muted); font-weight: 500; }
+.res-called { font-weight: 600; }
+
+.status-strip {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px;
+  max-width: 1440px; margin: 0 auto;
+  padding: 14px max(20px, env(safe-area-inset-right)) 0 max(20px, env(safe-area-inset-left));
+}
+.st-chip {
+  display: flex; flex-direction: column; gap: 6px; text-align: left; cursor: pointer;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; min-width: 0;
+}
+.st-chip:hover { border-color: var(--muted); }
+.st-chip.on { border-color: var(--tu); }
+.st-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.st-name { font: 800 15px var(--f-display); }
+.st-count { font: 500 12px var(--f-data); color: var(--muted); white-space: nowrap; }
+.st-count b { color: var(--ink); font-weight: 500; }
+.st-bar { display: block; height: 4px; border-radius: 2px; background: var(--pending); overflow: hidden; }
+.st-bar i { display: block; height: 100%; background: var(--tu); }
+.st-note { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 640px) {
+  .status-strip { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+}

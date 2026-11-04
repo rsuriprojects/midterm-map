@@ -82,6 +82,16 @@
     });
 
   function drawMap() {
+    // Striped fills for races that are leading but not called yet
+    const defs = svg.insert("defs", ":first-child");
+    Object.entries({ D: "var(--d2)", R: "var(--r2)", I: "var(--ind)" }).forEach(([p, c]) => {
+      const pt = defs.append("pattern").attr("id", "lead-" + p)
+        .attr("width", 8).attr("height", 8).attr("patternUnits", "userSpaceOnUse")
+        .attr("patternTransform", "rotate(45)");
+      pt.append("rect").attr("width", 8).attr("height", 8).style("fill", "var(--pending)");
+      pt.append("rect").attr("width", 4.5).attr("height", 8).style("fill", c);
+    });
+
     gStates.selectAll("path")
       .data(features, d => d.abbr)
       .join("path")
@@ -131,9 +141,25 @@
   // "Called races only" view: color only races a network has projected.
   let calledOnly = false;
   const PENDING = { color: "var(--pending)", text: "off" };
+  const SOLID = { D: "var(--d3)", R: "var(--r3)", I: "var(--ind)" };
+  const PARTY_WORD = { D: "Dem", R: "GOP", I: "Ind" };
+
+  // Election-night status of a Senate or governor race: called, leading in the count, or no votes yet.
+  function statusOf(race) {
+    const res = race.result;
+    if (res && res.called) return { kind: "called", p: res.called };
+    if (res && res.reporting > 0) {
+      const d = res.d || 0, r = res.r || 0, i = res.i || 0;
+      const p = i > d && i > r ? "I" : d > r ? "D" : "R";
+      const sorted = [d, r, i].sort((x, y) => y - x);
+      return { kind: "lead", p, by: sorted[0] - sorted[1], reporting: res.reporting };
+    }
+    return { kind: "waiting" };
+  }
+  const resultsMode = () => chamber !== "house" && hasResults();
   const calledKey = race => {
-    const c = race.result && race.result.called;
-    return c === "D" ? "SD" : c === "R" ? "SR" : c === "I" ? "TU" : null;
+    const st = statusOf(race);
+    return st.kind === "called" ? st.p : null;
   };
 
   function fillFor(abbr) {
@@ -143,7 +169,10 @@
     }
     const race = E[chamber].races[abbr];
     if (!race) return null;
-    if (calledOnly) { const k = calledKey(race); return k ? R[k] : PENDING; }
+    const st = statusOf(race);
+    if (st.kind === "called") return { color: SOLID[st.p], text: "light", mark: true };
+    if (calledOnly) return PENDING;
+    if (resultsMode()) return st.kind === "lead" ? { color: `url(#lead-${st.p})`, text: "light" } : PENDING;
     return R[category(race)];
   }
 
@@ -161,7 +190,7 @@
     } else {
       const n = Object.keys(C.races).length;
       document.getElementById("map-sub").textContent = hasResults()
-        ? `${n} races on the ballot. States with votes counted are colored by who leads; called races are solid.`
+        ? `${n} races on the ballot. Solid with a ✓ means a network has called the race. Striped means one side leads but it isn't called yet. Gray means no votes counted.`
         : `${n} races on the ballot Tuesday, colored by Cook Political Report rating. Hover or tap a state for the matchup.`;
     }
 
@@ -169,18 +198,21 @@
       .attr("class", d => "state" + (fillFor(d.abbr) ? "" : " none"))
       .style("fill", d => { const r = fillFor(d.abbr); return r ? r.color : null; });
 
+    const labelText = a => { const r = fillFor(a); return a + (r && r.mark ? " ✓" : ""); };
     gLabels.selectAll("text")
-      .attr("class", d => { const r = fillFor(d.abbr); return "lbl " + (r ? r.text : "off"); });
+      .attr("class", d => { const r = fillFor(d.abbr); return "lbl " + (r ? r.text : "off"); })
+      .text(d => labelText(d.abbr));
 
     gCallouts.selectAll("g")
       .attr("class", a => "callout" + (fillFor(a) ? "" : " none"))
       .each(function (a) {
         const r = fillFor(a);
         d3.select(this).select("rect").style("fill", r ? r.color : null);
-        d3.select(this).select("text").attr("class", "lbl " + (r ? r.text : "off"));
+        d3.select(this).select("text").attr("class", "lbl " + (r ? r.text : "off")).text(labelText(a));
       });
 
-    document.getElementById("called-wrap").hidden = chamber === "house";
+    document.getElementById("called-wrap").hidden = chamber === "house" || !hasResults();
+    renderStatus();
     renderLegend();
     renderTally();
     renderWatch();
@@ -197,15 +229,24 @@
       return;
     }
     const races = Object.values(E[chamber].races);
-    if (calledOnly) {
-      const n = k => races.filter(r => calledKey(r) === k).length;
-      const open = races.filter(r => !calledKey(r)).length;
-      document.getElementById("legend").innerHTML = [
-        `<li><i style="background:var(--d3)"></i>Called D <b>${n("SD")}</b></li>`,
-        `<li><i style="background:var(--r3)"></i>Called R <b>${n("SR")}</b></li>`,
-        n("TU") ? `<li><i style="background:var(--tu)"></i>Called independent <b>${n("TU")}</b></li>` : "",
-        `<li><i style="background:var(--pending)"></i>Not called yet <b>${open}</b></li>`,
-        `<li><i style="background:var(--empty)"></i>No race</li>`
+    if (calledOnly || resultsMode()) {
+      const n = (kind, p) => races.filter(r => { const s = statusOf(r); return s.kind === kind && (!p || s.p === p); }).length;
+      const item = (cls, label, count, always) => (always || count)
+        ? `<li><i class="${cls}"></i>${label} <b>${count}</b></li>` : "";
+      document.getElementById("legend").innerHTML = calledOnly ? [
+        item("sw-called-D", "✓ Called D", n("called", "D"), true),
+        item("sw-called-R", "✓ Called R", n("called", "R"), true),
+        item("sw-called-I", "✓ Called independent", n("called", "I")),
+        item("sw-wait", "Not called yet", races.length - n("called"), true),
+        `<li><i class="sw-none"></i>No race</li>`
+      ].join("") : [
+        item("sw-called-D", "✓ Called D", n("called", "D"), true),
+        item("sw-lead-D", "Leading D", n("lead", "D"), true),
+        item("sw-lead-I", "Leading independent", n("lead", "I")),
+        item("sw-lead-R", "Leading R", n("lead", "R"), true),
+        item("sw-called-R", "✓ Called R", n("called", "R"), true),
+        item("sw-wait", "No votes yet", n("waiting"), true),
+        `<li><i class="sw-none"></i>No race</li>`
       ].join("");
       return;
     }
@@ -257,7 +298,7 @@
 
   function renderTally() {
     if (chamber === "house") return renderHouseTally();
-    if (calledOnly) return renderCalledTally();
+    if (calledOnly || resultsMode()) return renderCalledTally();
     const C = E[chamber];
     const sum = { SD: 0, LkD: 0, LD: 0, TU: 0, LR: 0, LkR: 0, SR: 0 };
     Object.values(C.races).forEach(r => sum[category(r)]++);
@@ -286,26 +327,32 @@
     document.getElementById("bar-note").textContent = `Counts ${unit} at least leaning to each party. ` + note;
   }
 
+  // Election-night tally: the big numbers count only called races (plus seats not up);
+  // races that are only leading show as stripes and a "+N leading" note.
   function renderCalledTally() {
     const C = E[chamber], races = Object.values(C.races);
-    const cd = races.filter(r => calledKey(r) === "SD").length;
-    const cr = races.filter(r => calledKey(r) === "SR").length;
-    const ci = races.filter(r => calledKey(r) === "TU").length;
+    const n = (kind, p) => races.filter(r => { const s = statusOf(r); return s.kind === kind && (!p || s.p === p); }).length;
+    const cd = n("called", "D"), cr = n("called", "R"), ci = n("called", "I");
+    const showLeads = !calledOnly;
+    const ld = showLeads ? n("lead", "D") : 0, lr = showLeads ? n("lead", "R") : 0, li = showLeads ? n("lead", "I") : 0;
     const open = races.length - cd - cr - ci;
     const total = C.holdover.D + C.holdover.R + races.length;
     const d = C.holdover.D + cd, r = C.holdover.R + cr;
+    const leadNote = k => k ? `<span class="lead-note">+${k} leading</span>` : "";
     document.getElementById("tally").innerHTML = `
-      <div class="side-d"><span class="num">${d}</span><span class="who">Democrats</span></div>
+      <div class="side-d"><span class="num">${d}</span><span class="who">Democrats ${leadNote(ld)}</span></div>
       <div class="mid"><b>${open}</b>not called</div>
-      <div class="side-r"><span class="num">${r}</span><span class="who">Republicans</span></div>`;
-    const seg = (n, bg, cls = "") => `<span class="${cls}" style="width:${n / total * 100}%;${bg ? `background:${bg}` : ""}"></span>`;
+      <div class="side-r"><span class="num">${r}</span><span class="who">${leadNote(lr)} Republicans</span></div>`;
+    const seg = (k, cls, bg) => `<span class="${cls}" style="width:${k / total * 100}%;${bg ? `background:${bg}` : ""}"></span>`;
     document.getElementById("bar").innerHTML =
-      seg(C.holdover.D, null, "hold-d") + seg(cd, "var(--d3)") + seg(ci, "var(--tu)") + seg(open, "var(--pending)") +
-      seg(cr, "var(--r3)") + seg(C.holdover.R, null, "hold-r") +
+      seg(C.holdover.D, "hold-d") + seg(cd, "", "var(--d3)") + seg(ld, "sw-lead-D") +
+      seg(ci, "", "var(--ind)") + seg(li, "sw-lead-I") + seg(open - ld - lr - li, "", "var(--pending)") +
+      seg(lr, "sw-lead-R") + seg(cr, "", "var(--r3)") + seg(C.holdover.R, "hold-r") +
       `<i class="bar-mark" style="left:calc(${(C.majority / total) * 100}% - 1px)"></i>`;
     const unit = chamber === "senate" ? "seats" : "governorships";
     document.getElementById("bar-note").textContent =
-      `Only ${unit} a network has projected, plus the ${C.holdover.D} Democratic and ${C.holdover.R} Republican ${unit} not up this year.` +
+      `Big numbers count only called races, plus the ${C.holdover.D} Democratic and ${C.holdover.R} Republican ${unit} not up this year.` +
+      (showLeads ? " Striped parts of the bar are races one side leads but nobody has called." : "") +
       (chamber === "senate" ? " Democrats need 51 for control; Republicans need 50." : "");
   }
 
@@ -326,16 +373,28 @@
         </li>`).join("");
     } else {
     const races = E[chamber].races;
+    const live = hasResults();
+    const STATUS_RANK = { lead: 0, waiting: 1, called: 2 };
     const list = Object.keys(races)
       .filter(a => races[a].rating in ORDER)
-      .sort((a, b) => ORDER[races[a].rating] - ORDER[races[b].rating] || NAMES[a].localeCompare(NAMES[b]));
+      .sort((a, b) => (live ? STATUS_RANK[statusOf(races[a]).kind] - STATUS_RANK[statusOf(races[b]).kind] : 0) ||
+        ORDER[races[a].rating] - ORDER[races[b].rating] || NAMES[a].localeCompare(NAMES[b]));
     ol.innerHTML = list.map(a => {
       const x = races[a], rt = R[category(x)];
       const left = x.d || x.i, right = x.r;
+      let pill = `<span class="pill" style="background:${rt.color};color:${rt.text === "light" ? "#f4f6f9" : "#12151a"}">${rt.label}</span>`;
+      if (live) {
+        const st = statusOf(x);
+        pill = st.kind === "called"
+          ? `<span class="pill" style="background:${SOLID[st.p]};color:#f4f6f9">✓ ${PARTY_WORD[st.p]} win</span>`
+          : st.kind === "lead"
+            ? `<span class="pill pill-lead lead-${st.p}">${st.p} +${st.by.toFixed(1)} · ${Math.round(st.reporting)}%</span>`
+            : `<span class="pill pill-wait">No votes yet</span>`;
+      }
       return `<li data-abbr="${a}" tabindex="0">
         <span class="ab">${a}</span>
         <span class="m">${last(left)}<span class="vs">v</span>${last(right)}</span>
-        <span class="pill" style="background:${rt.color};color:${rt.text === "light" ? "#f4f6f9" : "#12151a"}">${rt.label}</span>
+        ${pill}
       </li>`;
     }).join("");
     }
@@ -375,7 +434,7 @@
         : `<small>${note}</small>`;
       const flip = held && ((held === "R" && rating.endsWith("D")) || (held === "D" && rating.endsWith("R")));
       const resLine = res && res.reporting > 0
-        ? `<span class="res">D ${res.d.toFixed(1)} · R ${res.r.toFixed(1)} · ${res.reporting}% counted${res.called ? " · called " + res.called : ""}</span>`
+        ? `<span class="res">${res.called ? `<b class="res-called" style="color:${SOLID[res.called]}">✓ ${PARTY_WORD[res.called]} win</b> · ` : "Not called · "}D ${res.d.toFixed(1)} · R ${res.r.toFixed(1)} · ${res.reporting}% counted</span>`
         : "";
       return `<li><span class="code">${code}</span><span class="who">${who}${flip ? " <small>· flip</small>" : ""}</span>${pillHTML(rating)}${resLine}</li>`;
     }).join("");
@@ -435,12 +494,20 @@
     const leadSub = counted ? "votes counted" : avg ? (avg.d != null ? "polling" : "polling average") : "";
 
     const flip = rt && race.held && ((race.held === "R" && rt.key.endsWith("D")) || (race.held === "D" && rt.key.endsWith("R")));
+    const st = statusOf(race);
+    const winner = st.kind === "called" ? (st.p === "D" ? race.d : st.p === "R" ? race.r : race.i) : null;
+    const flipped = winner && race.held && st.p !== race.held;
+    const banner = st.kind === "called"
+      ? `<div class="tip-status won" style="--c:${SOLID[st.p]}">✓ Called: ${winner} wins${flipped ? " · flip" : ""}</div>`
+      : st.kind === "lead"
+        ? `<div class="tip-status open">Not called yet · ${res.reporting}% of votes counted</div>`
+        : hasResults() ? `<div class="tip-status open">Not called · no votes counted yet</div>` : "";
     return `<button class="tip-close" aria-label="Close">×</button>
       <div class="tip-head"><h3>${NAMES[a]}</h3><span class="tip-kind">${kind}</span></div>
+      ${banner}
       ${leadLine ? `<div class="lead-row">${leadLine}<span class="lead-sub">${leadSub}</span></div>` : ""}
-      <span class="pill" style="background:${rt.color};color:${rt.text === "light" ? "#f4f6f9" : "#12151a"}">${rt.label}${flip ? " · flip" : ""}</span>
+      <span class="pill" style="background:${rt.color};color:${rt.text === "light" ? "#f4f6f9" : "#12151a"}">${hasResults() ? "Cook: " : ""}${rt.label}${flip && !hasResults() ? " · flip" : ""}</span>
       <ul class="cands">${rows}</ul>
-      ${counted ? `<div class="tip-sec"><p>${res.reporting}% of expected vote counted${res.called ? "" : ". Not yet called."}</p></div>` : ""}
       ${!counted && avg ? `<p class="avg-src">${avg.src}</p>` : ""}
       ${race.poll ? `<div class="tip-sec"><h4 class="eyebrow">Polling</h4><p>${race.poll}</p></div>` : ""}
       ${race.note ? `<div class="tip-sec"><p class="muted">${race.note}</p></div>` : ""}
@@ -494,6 +561,40 @@
   }
   document.addEventListener("click", ev => { if (pinned && !tip.contains(ev.target)) unpin(); });
   document.addEventListener("keydown", ev => { if (ev.key === "Escape") unpin(); });
+
+  // ---------- Status strip: how many races are called in each chamber ----------
+  function renderStatus() {
+    const el = document.getElementById("status");
+    const any = ["senate", "governor"].some(c => Object.values(E[c].races).some(r => r.result)) || H.called.D + H.called.R > 0;
+    el.hidden = !any;
+    if (!any) return;
+    const chip = (key, name, called, total, note) => `
+      <button class="st-chip${chamber === key ? " on" : ""}" data-chamber="${key}">
+        <span class="st-top"><span class="st-name">${name}</span><span class="st-count"><b>${called}</b> of ${total} called</span></span>
+        <span class="st-bar"><i style="width:${called / total * 100}%"></i></span>
+        <span class="st-note">${note}</span>
+      </button>`;
+    const sideCount = c => {
+      const races = Object.values(E[c].races);
+      const called = races.filter(r => statusOf(r).kind === "called");
+      const d = E[c].holdover.D + called.filter(r => r.result.called === "D").length;
+      const r = E[c].holdover.R + called.filter(r => r.result.called === "R").length;
+      return { called: called.length, total: races.length, d, r };
+    };
+    const s = sideCount("senate"), g = sideCount("governor");
+    const hc = H.called.D + H.called.R;
+    const pr = H.projected;
+    el.innerHTML =
+      chip("senate", "Senate", s.called, s.total, `D ${s.d} · R ${s.r} · need 51`) +
+      chip("house", "House", hc, 435, pr ? `✓ ${pr.party === "D" ? "Democrats" : "Republicans"} win control (${pr.by})` : `D ${H.called.D} · R ${H.called.R} · need 218`) +
+      chip("governor", "Governors", g.called, g.total, `D ${g.d} · R ${g.r} governors`);
+    el.querySelectorAll(".st-chip").forEach(b => b.addEventListener("click", () => {
+      chamber = b.dataset.chamber;
+      pinned = null;
+      try { localStorage.setItem("chamber", chamber); } catch (e) {}
+      render();
+    }));
+  }
 
   // ---------- Tabs ----------
   document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => {

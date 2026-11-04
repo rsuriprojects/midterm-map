@@ -8,7 +8,7 @@
 //   result: { d: 51.2, r: 47.1, i: 0, reporting: 88, called: "D" }   // called: "D" | "R" | "I" | null
 
 window.ELECTION = {
-  updated: "2026-11-01",
+  updated: "2026-11-03",
   electionDay: "2026-11-03",
   firstPollsClose: "2026-11-03T23:00:00Z", // 6pm ET, parts of IN and KY
 
@@ -69,7 +69,8 @@ window.ELECTION = {
       TX: { avg: { lead: "D", by: 1.4, src: "RealClearPolling average, Nov 1" }, held: "R", open: true, d: "James Talarico", r: "Ken Paxton", rating: "TU",
             poll: "Talarico 49, Paxton 43 (CNN). Poliwave's average has Talarico up about 2.9.",
             note: "John Cornyn lost the Republican runoff to Paxton." },
-      VA: { held: "D", d: "Mark Warner", r: "Bert Mizusawa", inc: "D", rating: "SD" },
+      VA: { held: "D", d: "Mark Warner", r: "Bert Mizusawa", inc: "D", rating: "SD",
+            result: { reporting: 0, called: "D" } },
       WV: { held: "R", d: "Rachel Fetty Anderson", r: "Shelley Moore Capito", inc: "R", rating: "SR" },
       WY: { held: "R", open: true, d: "James W. Byrd", r: "Harriet Hageman", rating: "SR" }
     }

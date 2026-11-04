@@ -232,8 +232,12 @@
         `<span style="width:${H.called.D / total * 100}%;background:var(--d3)"></span>` +
         `<span style="width:${(total - called) / total * 100}%"></span>` +
         `<span style="width:${H.called.R / total * 100}%;background:var(--r3)"></span>` + mark;
-      document.getElementById("bar-note").textContent =
-        `Seats called by the AP so far. A party needs ${H.majority} for control.`;
+      const pr = H.projected;
+      document.getElementById("bar-note").textContent = pr
+        ? `${pr.by} projects ${pr.party === "D" ? "Democrats" : "Republicans"} win control of the House` +
+          (pr.estimate ? `, with an estimated ${pr.estimate.D}–${pr.estimate.R} final split. ` : ". ") +
+          `Shown above: seats called so far. A party needs ${H.majority}.`
+        : `Seats called so far. A party needs ${H.majority} for control.`;
       return;
     }
 

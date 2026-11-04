@@ -182,7 +182,9 @@ window.ELECTION = {
     // Cook's Oct 30 count of seats at least leaning to each party (the rest are toss ups)
     leaning: { D: 222, R: 195 },
     // On election night, the AP's running count of called House seats
-    called: { D: 83, R: 34 },
+    called: { D: 121, R: 63 },
+    // Network projection of who wins the chamber, and its estimate of the final seat count
+    projected: { party: "D", by: "NBC News", estimate: { D: 244, R: 191 } },
     seats: {
       AL: 7, AK: 1, AZ: 9, AR: 4, CA: 52, CO: 8, CT: 5, DE: 1, FL: 28, GA: 14, HI: 2, ID: 2, IL: 17,
       IN: 9, IA: 4, KS: 4, KY: 6, LA: 6, ME: 2, MD: 8, MA: 9, MI: 13, MN: 8, MS: 4, MO: 8, MT: 2,

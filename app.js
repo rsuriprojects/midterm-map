@@ -39,8 +39,9 @@
     const res = race.result;
     if (res && res.called) return res.called === "D" ? "SD" : res.called === "R" ? "SR" : "TU";
     if (res && res.reporting > 0) {
-      const lead = res.d > res.r ? "D" : "R";
-      return lead === "D" ? "LD" : "LR";
+      const d = res.d || 0, r = res.r || 0, i = res.i || 0;
+      if (i > d && i > r) return "TU"; // an independent leads (Nebraska, Idaho, South Dakota)
+      return d > r ? "LD" : "LR";
     }
     return race.rating;
   }

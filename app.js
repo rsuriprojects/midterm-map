@@ -350,7 +350,9 @@
       seg(lr, "sw-lead-R") + seg(cr, "", "var(--r3)") + seg(C.holdover.R, "hold-r") +
       `<i class="bar-mark" style="left:calc(${(C.majority / total) * 100}% - 1px)"></i>`;
     const unit = chamber === "senate" ? "seats" : "governorships";
+    const sp = chamber === "senate" && C.projected;
     document.getElementById("bar-note").textContent =
+      (sp ? `${sp.by} projects ${sp.party === "D" ? "Democrats" : "Republicans"} win control of the Senate. ` : "") +
       `Big numbers count only called races, plus the ${C.holdover.D} Democratic and ${C.holdover.R} Republican ${unit} not up this year.` +
       (showLeads ? " Striped parts of the bar are races one side leads but nobody has called." : "") +
       (chamber === "senate" ? " Democrats need 51 for control; Republicans need 50." : "");
@@ -585,7 +587,9 @@
     const hc = H.called.D + H.called.R;
     const pr = H.projected;
     el.innerHTML =
-      chip("senate", "Senate", s.called, s.total, `D ${s.d} · R ${s.r} · need 51`) +
+      chip("senate", "Senate", s.called, s.total, E.senate.projected
+        ? `✓ ${E.senate.projected.party === "D" ? "Democrats" : "Republicans"} win control (${E.senate.projected.by}) · D ${s.d} · R ${s.r}`
+        : `D ${s.d} · R ${s.r} · need 51`) +
       chip("house", "House", hc, 435, pr ? `✓ ${pr.party === "D" ? "Democrats" : "Republicans"} win control (${pr.by})` : `D ${H.called.D} · R ${H.called.R} · need 218`) +
       chip("governor", "Governors", g.called, g.total, `D ${g.d} · R ${g.r} governors`);
     el.querySelectorAll(".st-chip").forEach(b => b.addEventListener("click", () => {

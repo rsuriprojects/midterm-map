@@ -26,6 +26,7 @@ window.ELECTION = {
       FL: { avg: { lead: "R", by: 6.3, src: "RealClearPolling average, Nov 1" }, held: "R", special: true, d: "Angie Nixon", r: "Ashley Moody", inc: "R", rating: "LkR",
             result: { d: 51.6, r: 47.4, reporting: 48, called: null } },
       GA: { avg: { d: 52.2, r: 42.7, src: "Poliwave average, Oct 30" }, held: "D", d: "Jon Ossoff", r: "Mike Collins", inc: "D", rating: "LkD",
+            result: { reporting: 0, called: "D" },
             poll: "Ossoff +9.5 in the Poliwave polling average." },
       ID: { held: "R", r: "Jim Risch", i: "Todd Achilles", inc: "R", rating: "SR",
             note: "The Democratic nominee withdrew, leaving independent Todd Achilles as the main challenger." },

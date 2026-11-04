@@ -7,6 +7,7 @@
   --muted: #8b94a3;
   --empty: #20252e;
   --empty-line: #2d3440;
+  --pending: #3a404c;
 
   --d3: #4677c4;
   --d2: #6e94d1;
@@ -93,6 +94,12 @@ button { font: inherit; color: inherit; }
 .callout.none rect { fill: var(--empty); cursor: default; }
 
 .legend { list-style: none; padding: 0; margin: 10px 0 0; display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--muted); }
+.called-toggle {
+  display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; padding: 6px 12px 6px 10px;
+  border: 1px solid var(--line); border-radius: 8px; font-size: 13px; cursor: pointer; user-select: none;
+}
+.called-toggle:hover { border-color: var(--muted); }
+.called-toggle input { accent-color: var(--tu); width: 15px; height: 15px; margin: 0; cursor: pointer; }
 .legend li { display: flex; align-items: center; gap: 7px; }
 .legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
 .legend b { font: 500 12px var(--f-data); color: var(--ink); }
@@ -188,3 +195,5 @@ button { font: inherit; color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
+
+[hidden] { display: none !important; }

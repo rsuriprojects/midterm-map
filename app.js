@@ -128,6 +128,14 @@
       .text(a => a);
   }
 
+  // "Called races only" view: color only races a network has projected.
+  let calledOnly = false;
+  const PENDING = { color: "var(--pending)", text: "off" };
+  const calledKey = race => {
+    const c = race.result && race.result.called;
+    return c === "D" ? "SD" : c === "R" ? "SR" : c === "I" ? "TU" : null;
+  };
+
   function fillFor(abbr) {
     if (chamber === "house") {
       const n = competitiveIn(abbr);
@@ -135,6 +143,7 @@
     }
     const race = E[chamber].races[abbr];
     if (!race) return null;
+    if (calledOnly) { const k = calledKey(race); return k ? R[k] : PENDING; }
     return R[category(race)];
   }
 
@@ -171,6 +180,7 @@
         d3.select(this).select("text").attr("class", "lbl " + (r ? r.text : "off"));
       });
 
+    document.getElementById("called-wrap").hidden = chamber === "house";
     renderLegend();
     renderTally();
     renderWatch();
@@ -187,6 +197,18 @@
       return;
     }
     const races = Object.values(E[chamber].races);
+    if (calledOnly) {
+      const n = k => races.filter(r => calledKey(r) === k).length;
+      const open = races.filter(r => !calledKey(r)).length;
+      document.getElementById("legend").innerHTML = [
+        `<li><i style="background:var(--d3)"></i>Called D <b>${n("SD")}</b></li>`,
+        `<li><i style="background:var(--r3)"></i>Called R <b>${n("SR")}</b></li>`,
+        n("TU") ? `<li><i style="background:var(--tu)"></i>Called independent <b>${n("TU")}</b></li>` : "",
+        `<li><i style="background:var(--pending)"></i>Not called yet <b>${open}</b></li>`,
+        `<li><i style="background:var(--empty)"></i>No race</li>`
+      ].join("");
+      return;
+    }
     const counts = {};
     races.forEach(r => { const c = category(r); counts[c] = (counts[c] || 0) + 1; });
     const items = RATINGS.map(r =>
@@ -231,6 +253,7 @@
 
   function renderTally() {
     if (chamber === "house") return renderHouseTally();
+    if (calledOnly) return renderCalledTally();
     const C = E[chamber];
     const sum = { SD: 0, LkD: 0, LD: 0, TU: 0, LR: 0, LkR: 0, SR: 0 };
     Object.values(C.races).forEach(r => sum[category(r)]++);
@@ -257,6 +280,29 @@
       ? `Includes ${C.holdover.D} Democratic and ${C.holdover.R} Republican seats not up this year (the two independents caucus with Democrats). Democrats need 51 seats for control, a net gain of 4; Republicans keep it at 50 with the vice president's tiebreak.`
       : `Includes ${C.holdover.D} Democratic and ${C.holdover.R} Republican governors not up this year. Republicans hold 26 governorships today, Democrats 24.`;
     document.getElementById("bar-note").textContent = `Counts ${unit} at least leaning to each party. ` + note;
+  }
+
+  function renderCalledTally() {
+    const C = E[chamber], races = Object.values(C.races);
+    const cd = races.filter(r => calledKey(r) === "SD").length;
+    const cr = races.filter(r => calledKey(r) === "SR").length;
+    const ci = races.filter(r => calledKey(r) === "TU").length;
+    const open = races.length - cd - cr - ci;
+    const total = C.holdover.D + C.holdover.R + races.length;
+    const d = C.holdover.D + cd, r = C.holdover.R + cr;
+    document.getElementById("tally").innerHTML = `
+      <div class="side-d"><span class="num">${d}</span><span class="who">Democrats</span></div>
+      <div class="mid"><b>${open}</b>not called</div>
+      <div class="side-r"><span class="num">${r}</span><span class="who">Republicans</span></div>`;
+    const seg = (n, bg, cls = "") => `<span class="${cls}" style="width:${n / total * 100}%;${bg ? `background:${bg}` : ""}"></span>`;
+    document.getElementById("bar").innerHTML =
+      seg(C.holdover.D, null, "hold-d") + seg(cd, "var(--d3)") + seg(ci, "var(--tu)") + seg(open, "var(--pending)") +
+      seg(cr, "var(--r3)") + seg(C.holdover.R, null, "hold-r") +
+      `<i class="bar-mark" style="left:calc(${(C.majority / total) * 100}% - 1px)"></i>`;
+    const unit = chamber === "senate" ? "seats" : "governorships";
+    document.getElementById("bar-note").textContent =
+      `Only ${unit} a network has projected, plus the ${C.holdover.D} Democratic and ${C.holdover.R} Republican ${unit} not up this year.` +
+      (chamber === "senate" ? " Democrats need 51 for control; Republicans need 50." : "");
   }
 
   const ORDER = { TU: 0, LD: 1, LR: 1, LkD: 2, LkR: 2 };
@@ -452,6 +498,15 @@
     try { localStorage.setItem("chamber", chamber); } catch (e) {}
     render();
   }));
+  const calledBox = document.getElementById("called-only");
+  try { calledOnly = localStorage.getItem("calledOnly") === "1"; } catch (e) {}
+  calledBox.checked = calledOnly;
+  calledBox.addEventListener("change", () => {
+    calledOnly = calledBox.checked;
+    try { localStorage.setItem("calledOnly", calledOnly ? "1" : "0"); } catch (e) {}
+    render();
+  });
+
   try {
     const saved = localStorage.getItem("chamber");
     if (saved === "governor" || saved === "senate" || saved === "house") chamber = saved;

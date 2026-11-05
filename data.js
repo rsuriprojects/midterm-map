@@ -21,7 +21,7 @@ window.ELECTION = {
     races: {
       AL: { held: "R", open: true, d: "Everett Wess", r: "Barry Moore", rating: "SR", result: { d: 44.5, r: 55.5, reporting: 81, called: "R" } },
       AK: { avg: { d: 48.2, r: 46.4, src: "Poliwave average, Oct 30" }, held: "R", d: "Mary Peltola", r: "Dan Sullivan", inc: "R", rating: "TU",
-            result: { d: 48.2, r: 47.9, reporting: 74, called: null },
+            result: { d: 48.2, r: 47.9, reporting: 76, called: null },
             poll: "Peltola led October polls by 2 to 7 points; September polls were tied or showed Sullivan slightly ahead." },
       AR: { held: "R", d: "Hallie Shoffner", r: "Tom Cotton", inc: "R", rating: "SR",
             result: { d: 42.4, r: 54.4, reporting: 91, called: "R" } },
@@ -61,7 +61,7 @@ window.ELECTION = {
       MN: { avg: { lead: "D", by: 5.8, src: "RealClearPolling average, Nov 1" }, held: "D", open: true, d: "Peggy Flanagan", r: "Michele Tafoya", rating: "LkD",
             result: { d: 53.7, r: 43.6, reporting: 100, called: "D" } },
       MS: { held: "R", d: "Scott Colom", r: "Cindy Hyde-Smith", inc: "R", rating: "LkR",
-            result: { d: 49.0, r: 48.9, reporting: 95.6, called: null } },
+            result: { d: 49.0, r: 48.9, reporting: 96, called: null } },
       MT: { held: "R", open: true, d: "Alani Bankhead", r: "Kurt Alme", i: "Seth Bodnar", rating: "SR",
             result: { d: 11.9, r: 48.3, i: 38.0, reporting: 27, called: "R" },
             note: "Independent Seth Bodnar has support from former state Democratic leaders." },
@@ -194,7 +194,7 @@ window.ELECTION = {
     // Cook's Oct 30 count of seats at least leaning to each party (the rest are toss ups)
     leaning: { D: 222, R: 195 },
     // On election night, the AP's running count of called House seats
-    called: { D: 237, R: 147 },
+    called: { D: 242, R: 151 },
     // Network projection of who wins the chamber, and its estimate of the final seat count
     projected: { party: "D", by: "NBC News", estimate: { D: 252, R: 183 } },
     seats: {
@@ -238,8 +238,8 @@ window.ELECTION = {
       ["KS-02", "R", "Derek Schmidt", "LkR"],
       ["KY-06", "R", "Andy Barr", "TU", "retiring", { d: 52.7, r: 43.3, reporting: 95, called: "D" }],
       ["ME-02", "D", "Jared Golden", "LR", "retiring", { d: 46.5, r: 53.5, reporting: 44, called: null }],
-      ["MI-04", "R", "Bill Huizenga", "TU", "", { d: 36.3, r: 62.2, reporting: 6, called: "D" }],
-      ["MI-07", "R", "Tom Barrett", "TU", "", { d: 44.4, r: 54.4, reporting: 52, called: "D" }],
+      ["MI-04", "R", "Bill Huizenga", "TU", "", { d: 50.1, r: 48.3, reporting: 97, called: "D" }],
+      ["MI-07", "R", "Tom Barrett", "TU", "", { d: 51.0, r: 47.7, reporting: 97, called: "D" }],
       ["MI-08", "D", "Kristen McDonald Rivet", "LkD"],
       ["MI-10", "R", "John James", "TU", "retiring", { d: 52.4, r: 45.3, reporting: 95, called: "D" }],
       ["MN-01", "R", "Brad Finstad", "LR"],
@@ -270,7 +270,7 @@ window.ELECTION = {
       ["NC-13", "R", "Brad Knott", "LkR"],
       ["OH-01", "D", "Greg Landsman", "LkD"],
       ["OH-07", "R", "Max Miller", "TU", "", { d: 53.9, r: 46.1, reporting: 69, called: "D" }],
-      ["OH-09", "D", "Marcy Kaptur", "LD", "", { d: 40.7, r: 59.3, reporting: 47, called: "D" }],
+      ["OH-09", "D", "Marcy Kaptur", "LD", "", { d: 52.7, r: 47.3, reporting: 98, called: "D" }],
       ["OH-10", "R", "Mike Turner", "LR"],
       ["OH-13", "D", "Emilia Sykes", "LkD"],
       ["OH-15", "R", "Mike Carey", "LR"],
@@ -291,7 +291,7 @@ window.ELECTION = {
       ["VA-02", "R", "Jen Kiggans", "LD", "", { d: 51.6, r: 46.1, reporting: 27, called: "D" }],
       ["VA-05", "R", "John McGuire", "LkR"],
       ["VA-07", "D", "Eugene Vindman", "LkD"],
-      ["WA-03", "D", "Marie Gluesenkamp Perez", "LD", "", { d: 42.9, r: 56.3, reporting: 23, called: "D" }],
+      ["WA-03", "D", "Marie Gluesenkamp Perez", "LD", "", { d: 54.7, r: 44.4, reporting: 68, called: "D" }],
       ["WA-05", "R", "Michael Baumgartner", "LkR"],
       ["WI-01", "R", "Bryan Steil", "LR"],
       ["WI-03", "R", "Derrick Van Orden", "LD", "", { d: 52.4, r: 45.8, reporting: 70, called: "D" }]

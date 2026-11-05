@@ -61,7 +61,7 @@ window.ELECTION = {
       MN: { avg: { lead: "D", by: 5.8, src: "RealClearPolling average, Nov 1" }, held: "D", open: true, d: "Peggy Flanagan", r: "Michele Tafoya", rating: "LkD",
             result: { d: 53.7, r: 43.6, reporting: 100, called: "D" } },
       MS: { held: "R", d: "Scott Colom", r: "Cindy Hyde-Smith", inc: "R", rating: "LkR",
-            result: { d: 48.9, r: 48.9, reporting: 96, called: null } },
+            result: { d: 49.0, r: 48.9, reporting: 95.6, called: null } },
       MT: { held: "R", open: true, d: "Alani Bankhead", r: "Kurt Alme", i: "Seth Bodnar", rating: "SR",
             result: { d: 11.9, r: 48.3, i: 38.0, reporting: 27, called: "R" },
             note: "Independent Seth Bodnar has support from former state Democratic leaders." },

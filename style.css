@@ -244,3 +244,10 @@ button { font: inherit; color: inherit; }
 @media (max-width: 640px) {
   .status-strip { grid-template-columns: minmax(0, 1fr); gap: 8px; }
 }
+
+/* House margins */
+.mlbl { font: 500 9px var(--f-data); text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+.mlbl.light { fill: #f4f6f9; paint-order: stroke; stroke: rgba(10, 12, 16, 0.55); stroke-width: 2.5px; }
+.mlbl.dark { fill: #12151a; }
+.mlbl.off { fill: transparent; }
+.tip-seats { font: 500 12px var(--f-data); color: var(--muted); margin-top: 2px; }

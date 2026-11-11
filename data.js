@@ -8,7 +8,7 @@
 //   result: { d: 51.2, r: 47.1, i: 0, reporting: 88, called: "D" }   // called: "D" | "R" | "I" | null
 
 window.ELECTION = {
-  updated: "2026-11-04",
+  updated: "2026-11-11",
   electionDay: "2026-11-03",
   firstPollsClose: "2026-11-03T23:00:00Z", // 6pm ET, parts of IN and KY
 
@@ -61,7 +61,8 @@ window.ELECTION = {
       MN: { avg: { lead: "D", by: 5.8, src: "RealClearPolling average, Nov 1" }, held: "D", open: true, d: "Peggy Flanagan", r: "Michele Tafoya", rating: "LkD",
             result: { d: 53.7, r: 43.6, reporting: 100, called: "D" } },
       MS: { held: "R", d: "Scott Colom", r: "Cindy Hyde-Smith", inc: "R", rating: "LkR",
-            result: { d: 49.0, r: 48.9, reporting: 96, called: null } },
+            note: "Called for Colom by CNN on Nov 11 (Colom led by about 4,600 votes with 99% counted). NBC still had it too close to call.",
+            result: { d: 49.2, r: 48.7, reporting: 99, called: "D" } },
       MT: { held: "R", open: true, d: "Alani Bankhead", r: "Kurt Alme", i: "Seth Bodnar", rating: "SR",
             result: { d: 11.9, r: 48.3, i: 38.0, reporting: 27, called: "R" },
             note: "Independent Seth Bodnar has support from former state Democratic leaders." },

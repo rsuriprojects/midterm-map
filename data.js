@@ -8,7 +8,7 @@
 //   result: { d: 51.2, r: 47.1, i: 0, reporting: 88, called: "D" }   // called: "D" | "R" | "I" | null
 
 window.ELECTION = {
-  updated: "2026-11-12",
+  updated: "2026-11-13",
   electionDay: "2026-11-03",
   firstPollsClose: "2026-11-03T23:00:00Z", // 6pm ET, parts of IN and KY
 
@@ -21,7 +21,7 @@ window.ELECTION = {
     races: {
       AL: { held: "R", open: true, d: "Everett Wess", r: "Barry Moore", rating: "SR", result: { d: 44.5, r: 55.5, reporting: 81, called: "R" } },
       AK: { avg: { d: 48.2, r: 46.4, src: "Poliwave average, Oct 30" }, held: "R", d: "Mary Peltola", r: "Dan Sullivan", inc: "R", rating: "TU",
-            result: { d: 48.9, r: 47.3, reporting: 86, called: null },
+            result: { d: 49.2, r: 47.0, reporting: 88, called: null },
             poll: "Peltola led October polls by 2 to 7 points; September polls were tied or showed Sullivan slightly ahead." },
       AR: { held: "R", d: "Hallie Shoffner", r: "Tom Cotton", inc: "R", rating: "SR",
             result: { d: 42.4, r: 54.4, reporting: 91, called: "R" } },
@@ -117,7 +117,7 @@ window.ELECTION = {
       AL: { held: "R", open: true, d: "Doug Jones", r: "Tommy Tuberville", rating: "SR", result: { d: 47.9, r: 52.1, reporting: 99, called: "R" } },
       AK: { held: "R", open: true, d: "Jonathan Kreiss-Tomkins", r: "Bernadette Wilson", rating: "LD",
             note: "Top-four primary with a ranked-choice general election. Cook moved it to Lean D on Oct 13.",
-            result: { d: 49.8, r: 29.0, reporting: 86, called: null } },
+            result: { d: 50.2, r: 28.7, reporting: 88, called: null } },
       AZ: { held: "D", d: "Katie Hobbs", r: "Andy Biggs", inc: "D", rating: "LkD",
             result: { d: 55.6, r: 42.7, reporting: 83, called: "D" } },
       AR: { held: "R", d: "Fredrick Love", r: "Sarah Huckabee Sanders", inc: "R", rating: "SR",
